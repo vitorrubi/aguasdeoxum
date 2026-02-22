@@ -1,6 +1,8 @@
 package middleware
 
 import (
+	"encoding/base64"
+	"log"
 	"net/http"
 	"os"
 	"strings"
@@ -17,7 +19,11 @@ func Auth(next http.Handler) http.Handler {
 		}
 
 		tokenStr := strings.TrimPrefix(authHeader, "Bearer ")
-		secret := []byte(os.Getenv("SUPABASE_JWT_SECRET"))
+		secretRaw := os.Getenv("SUPABASE_JWT_SECRET")
+		secret, err := base64.StdEncoding.DecodeString(secretRaw)
+		if err != nil {
+			secret = []byte(secretRaw)
+		}
 
 		token, err := jwt.Parse(tokenStr, func(t *jwt.Token) (interface{}, error) {
 			if _, ok := t.Method.(*jwt.SigningMethodHMAC); !ok {
@@ -27,6 +33,7 @@ func Auth(next http.Handler) http.Handler {
 		})
 
 		if err != nil || !token.Valid {
+			log.Printf("auth error: %v", err)
 			http.Error(w, "unauthorized", http.StatusUnauthorized)
 			return
 		}

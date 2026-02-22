@@ -1,6 +1,7 @@
 # env
 .env
 *.env
+frontend/.env
 
 # Go
 backend/server
