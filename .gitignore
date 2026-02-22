@@ -1,0 +1,11 @@
+# env
+.env
+*.env
+
+# Go
+backend/server
+
+# Node
+node_modules/
+frontend/.next/
+frontend/dist/
