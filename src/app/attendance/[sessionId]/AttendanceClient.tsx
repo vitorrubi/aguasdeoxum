@@ -10,6 +10,7 @@ import { Badge } from '@/components/ui/badge'
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table'
 import { getVisitorByPhone, createVisitor } from '@/actions/visitors'
 import { registerAttendance } from '@/actions/attendances'
+import { formatPhone } from '@/lib/utils'
 
 interface Session {
     id: string
@@ -37,7 +38,7 @@ export default function AttendanceClient({ sessionId, session, initialAttendance
     const [loading, setLoading] = useState(false)
 
     async function handlePhoneBlur() {
-        if (phone.length < 8) return
+        if (phone.replace(/\D/g, '').length < 10) return
         setIsNew(false)
         setName('')
         setVisitorId('')
@@ -70,6 +71,7 @@ export default function AttendanceClient({ sessionId, session, initialAttendance
             setPhone('')
             setName('')
             setVisitorId('')
+            setTimeout(() => setMessage(''), 3000)
         } catch (err: unknown) {
             setMessage(err instanceof Error ? err.message : 'Erro ao registrar')
         } finally {
@@ -114,7 +116,7 @@ export default function AttendanceClient({ sessionId, session, initialAttendance
                             <Input
                                 id="phone"
                                 value={phone}
-                                onChange={(e) => setPhone(e.target.value)}
+                                onChange={(e) => setPhone(formatPhone(e.target.value))}
                                 onBlur={handlePhoneBlur}
                                 placeholder="(11) 99999-9999"
                             />

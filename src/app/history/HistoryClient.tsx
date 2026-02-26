@@ -9,6 +9,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table'
 import { getAttendanceHistory } from '@/actions/attendances'
+import { formatPhone } from '@/lib/utils'
 
 interface Attendance {
     id: string
@@ -62,7 +63,7 @@ export default function HistoryClient() {
                                 <Input
                                     id="phone"
                                     value={phone}
-                                    onChange={(e) => setPhone(e.target.value)}
+                                    onChange={(e) => setPhone(formatPhone(e.target.value))}
                                     placeholder="(11) 99999-9999"
                                 />
                             </div>
