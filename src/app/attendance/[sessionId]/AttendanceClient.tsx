@@ -1,0 +1,175 @@
+"use client"
+
+import { useState } from 'react'
+import { useRouter } from 'next/navigation'
+import { Button } from '@/components/ui/button'
+import { Input } from '@/components/ui/input'
+import { Label } from '@/components/ui/label'
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
+import { Badge } from '@/components/ui/badge'
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table'
+import { getVisitorByPhone, createVisitor } from '@/actions/visitors'
+import { registerAttendance } from '@/actions/attendances'
+
+export default function AttendanceClient({ sessionId, session, initialAttendances }: any) {
+    const router = useRouter()
+    const [phone, setPhone] = useState('')
+    const [name, setName] = useState('')
+    const [isNew, setIsNew] = useState(false)
+    const [visitorId, setVisitorId] = useState('')
+    const [message, setMessage] = useState('')
+    const [loading, setLoading] = useState(false)
+
+    async function handlePhoneBlur() {
+        if (phone.length < 8) return
+        setIsNew(false)
+        setName('')
+        setVisitorId('')
+        try {
+            const data = await getVisitorByPhone(phone)
+            if (data) {
+                setName(data.name)
+                setVisitorId(data.id)
+            } else {
+                setIsNew(true)
+            }
+        } catch {
+            setIsNew(true)
+        }
+    }
+
+    async function handleRegister(ticketType: string) {
+        setMessage('')
+        setLoading(true)
+        try {
+            let id = visitorId
+            if (isNew) {
+                const newVisitor = await createVisitor(name, phone)
+                id = newVisitor.id
+                setVisitorId(id)
+                setIsNew(false)
+            }
+            await registerAttendance(id, sessionId, ticketType)
+            setMessage('Presença registrada!')
+            setPhone('')
+            setName('')
+            setVisitorId('')
+        } catch (err: any) {
+            setMessage(err.message || 'Erro ao registrar')
+        } finally {
+            setLoading(false)
+        }
+    }
+
+    const ticketsLeft = session ? session.consultation_tickets_available - session.consultation_tickets_used : 0
+
+    const ticketLabel: Record<string, string> = {
+        none: 'Sem ficha',
+        pass: 'Passe',
+        consultation: 'Consulta',
+    }
+
+    const ticketVariant: Record<string, 'default' | 'secondary' | 'outline'> = {
+        none: 'outline',
+        pass: 'secondary',
+        consultation: 'default',
+    }
+
+    return (
+        <div className="min-h-screen bg-muted/40 p-4">
+            <div className="max-w-2xl mx-auto space-y-4">
+                <div className="flex items-center justify-between">
+                    <h1 className="text-xl font-bold">Registro de Presença</h1>
+                    <Button variant="outline" size="sm" onClick={() => router.push('/')}>Voltar</Button>
+                </div>
+
+                {session && (
+                    <p className="text-sm text-muted-foreground">
+                        Fichas de consulta: {session.consultation_tickets_used}/{session.consultation_tickets_available}
+                    </p>
+                )}
+
+                <Card>
+                    <CardHeader><CardTitle>Identificar Visitante</CardTitle></CardHeader>
+                    <CardContent className="space-y-4">
+                        <div className="space-y-1">
+                            <Label htmlFor="phone">Celular</Label>
+                            <Input
+                                id="phone"
+                                value={phone}
+                                onChange={(e) => setPhone(e.target.value)}
+                                onBlur={handlePhoneBlur}
+                                placeholder="(11) 99999-9999"
+                            />
+                        </div>
+                        <div className="space-y-1">
+                            <Label htmlFor="name">Nome</Label>
+                            <Input
+                                id="name"
+                                value={name}
+                                onChange={(e) => setName(e.target.value)}
+                                readOnly={!isNew}
+                                placeholder={isNew ? 'Novo visitante — informe o nome' : ''}
+                            />
+                        </div>
+
+                        {message && (
+                            <p className={`text-sm ${message.includes('registrada') ? 'text-green-600' : 'text-destructive'}`}>
+                                {message}
+                            </p>
+                        )}
+
+                        <div className="flex gap-2 flex-wrap">
+                            <Button
+                                variant="outline"
+                                onClick={() => handleRegister('none')}
+                                disabled={!visitorId && !(isNew && name) || loading}
+                            >
+                                Sem ficha
+                            </Button>
+                            <Button
+                                variant="secondary"
+                                onClick={() => handleRegister('pass')}
+                                disabled={!visitorId && !(isNew && name) || loading}
+                            >
+                                Ficha de Passe
+                            </Button>
+                            <Button
+                                onClick={() => handleRegister('consultation')}
+                                disabled={(!visitorId && !(isNew && name)) || ticketsLeft <= 0 || loading}
+                            >
+                                Ficha de Consulta {ticketsLeft <= 0 && '(esgotada)'}
+                            </Button>
+                        </div>
+                    </CardContent>
+                </Card>
+
+                <Card>
+                    <CardHeader><CardTitle>Presentes hoje ({initialAttendances?.length || 0})</CardTitle></CardHeader>
+                    <CardContent>
+                        <Table>
+                            <TableHeader>
+                                <TableRow>
+                                    <TableHead>Nome</TableHead>
+                                    <TableHead>Celular</TableHead>
+                                    <TableHead>Ficha</TableHead>
+                                </TableRow>
+                            </TableHeader>
+                            <TableBody>
+                                {initialAttendances?.map((a: any) => (
+                                    <TableRow key={a.id}>
+                                        <TableCell>{a.visitor.name}</TableCell>
+                                        <TableCell>{a.visitor.phone}</TableCell>
+                                        <TableCell>
+                                            <Badge variant={ticketVariant[a.ticket_type]}>{ticketLabel[a.ticket_type]}</Badge>
+                                        </TableCell>
+                                    </TableRow>
+                                ))}
+                            </TableBody>
+                        </Table>
+                    </CardContent>
+                </Card>
+            </div>
+        </div>
+    )
+}
