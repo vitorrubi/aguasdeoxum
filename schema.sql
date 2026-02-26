@@ -10,7 +10,8 @@ CREATE TABLE sessions (
   opened_at                      TIMESTAMPTZ NOT NULL DEFAULT NOW(),
   closed_at                      TIMESTAMPTZ,
   consultation_tickets_available INT NOT NULL,
-  consultation_tickets_used      INT NOT NULL DEFAULT 0
+  consultation_tickets_used      INT NOT NULL DEFAULT 0,
+  gira                           TEXT NOT NULL
 );
 
 CREATE TABLE attendances (
@@ -21,3 +22,7 @@ CREATE TABLE attendances (
   created_at  TIMESTAMPTZ NOT NULL DEFAULT NOW(),
   UNIQUE (visitor_id, session_id)
 );
+
+-- MIGRATION: Se você já rodou o schema acima no Supabase antes de adicionar a Gira, 
+-- rode apenas essa linha no SQL Editor para atualizar a tabela:
+-- ALTER TABLE sessions ADD COLUMN gira TEXT NOT NULL DEFAULT 'Esquerda';

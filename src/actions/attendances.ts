@@ -27,7 +27,7 @@ export async function getAttendanceHistory(phone: string) {
 
     const { data: attendances } = await supabase
         .from('attendances')
-        .select('*')
+        .select('*, session:sessions(gira)')
         .eq('visitor_id', visitor.id)
         .order('created_at', { ascending: false })
 

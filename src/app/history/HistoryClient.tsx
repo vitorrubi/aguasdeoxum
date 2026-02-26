@@ -10,10 +10,18 @@ import { Badge } from '@/components/ui/badge'
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table'
 import { getAttendanceHistory } from '@/actions/attendances'
 
+interface Attendance {
+    id: string
+    ticket_type: string
+    created_at: string
+    session?: { gira: string }
+    visitor: { name: string; phone: string }
+}
+
 export default function HistoryClient() {
     const router = useRouter()
     const [phone, setPhone] = useState('')
-    const [history, setHistory] = useState<any[] | null>(null)
+    const [history, setHistory] = useState<Attendance[] | null>(null)
     const [notFound, setNotFound] = useState(false)
     const [loading, setLoading] = useState(false)
 
@@ -76,6 +84,7 @@ export default function HistoryClient() {
                                 <TableHeader>
                                     <TableRow>
                                         <TableHead>Data</TableHead>
+                                        <TableHead>Gira</TableHead>
                                         <TableHead>Ficha</TableHead>
                                     </TableRow>
                                 </TableHeader>
@@ -83,6 +92,7 @@ export default function HistoryClient() {
                                     {history.map((a) => (
                                         <TableRow key={a.id}>
                                             <TableCell>{new Date(a.created_at).toLocaleString('pt-BR')}</TableCell>
+                                            <TableCell>{a.session?.gira || '-'}</TableCell>
                                             <TableCell>
                                                 <Badge variant={ticketVariant[a.ticket_type]}>{ticketLabel[a.ticket_type]}</Badge>
                                             </TableCell>

@@ -9,6 +9,10 @@ import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
+
+const GIRAS = ["Esquerda", "Marujos", "Ciganos", "Pretos Velhos", "Erês", "Malandros", "Caboclos", "Boiadeiros", "Baianos"]
+
 
 interface Session {
     id: string
@@ -16,16 +20,18 @@ interface Session {
     closed_at: string | null
     consultation_tickets_available: number
     consultation_tickets_used: number
+    gira: string
 }
 
 export default function DashboardClient({ initialSession }: { initialSession: Session | null }) {
     const router = useRouter()
     const [tickets, setTickets] = useState('')
+    const [gira, setGira] = useState('')
     const [loading, setLoading] = useState(false)
 
     async function handleOpenSession() {
         setLoading(true)
-        await openSession(Number(tickets))
+        await openSession(Number(tickets), gira)
         setLoading(false)
     }
 
@@ -54,7 +60,7 @@ export default function DashboardClient({ initialSession }: { initialSession: Se
                     <Card>
                         <CardHeader>
                             <CardTitle className="flex items-center gap-2">
-                                Sessão Ativa
+                                Sessão Ativa - {initialSession.gira}
                                 <Badge variant="default">Aberta</Badge>
                             </CardTitle>
                         </CardHeader>
@@ -88,18 +94,33 @@ export default function DashboardClient({ initialSession }: { initialSession: Se
                             <CardTitle>Abrir Nova Sessão</CardTitle>
                         </CardHeader>
                         <CardContent className="space-y-4">
-                            <div className="space-y-1">
-                                <Label htmlFor="tickets">Fichas de consulta disponíveis</Label>
-                                <Input
-                                    id="tickets"
-                                    type="number"
-                                    min="0"
-                                    value={tickets}
-                                    onChange={(e) => setTickets(e.target.value)}
-                                    placeholder="Ex: 10"
-                                />
+                            <div className="space-y-4">
+                                <div className="space-y-1">
+                                    <Label htmlFor="gira">Gira do dia</Label>
+                                    <Select value={gira} onValueChange={setGira}>
+                                        <SelectTrigger id="gira">
+                                            <SelectValue placeholder="Selecione a gira" />
+                                        </SelectTrigger>
+                                        <SelectContent>
+                                            {GIRAS.map((g) => (
+                                                <SelectItem key={g} value={g}>{g}</SelectItem>
+                                            ))}
+                                        </SelectContent>
+                                    </Select>
+                                </div>
+                                <div className="space-y-1">
+                                    <Label htmlFor="tickets">Fichas de consulta disponíveis</Label>
+                                    <Input
+                                        id="tickets"
+                                        type="number"
+                                        min="0"
+                                        value={tickets}
+                                        onChange={(e) => setTickets(e.target.value)}
+                                        placeholder="Ex: 10"
+                                    />
+                                </div>
                             </div>
-                            <Button className="w-full" onClick={handleOpenSession} disabled={!tickets || loading}>
+                            <Button className="w-full" onClick={handleOpenSession} disabled={!tickets || !gira || loading}>
                                 {loading ? 'Abrindo...' : 'Abrir Sessão'}
                             </Button>
                         </CardContent>

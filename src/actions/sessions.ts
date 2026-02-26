@@ -17,11 +17,11 @@ export async function getActiveSession() {
     return data
 }
 
-export async function openSession(tickets: number) {
+export async function openSession(tickets: number, gira: string) {
     const supabase = await createClient()
     const { data, error } = await supabase
         .from('sessions')
-        .insert({ consultation_tickets_available: tickets })
+        .insert({ consultation_tickets_available: tickets, gira })
         .select()
         .single()
 

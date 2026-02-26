@@ -11,7 +11,23 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@
 import { getVisitorByPhone, createVisitor } from '@/actions/visitors'
 import { registerAttendance } from '@/actions/attendances'
 
-export default function AttendanceClient({ sessionId, session, initialAttendances }: any) {
+interface Session {
+    id: string
+    opened_at: string
+    closed_at: string | null
+    consultation_tickets_available: number
+    consultation_tickets_used: number
+    gira: string
+}
+
+interface Attendance {
+    id: string
+    ticket_type: string
+    created_at: string
+    visitor: { name: string; phone: string }
+}
+
+export default function AttendanceClient({ sessionId, session, initialAttendances }: { sessionId: string, session: Session | null, initialAttendances: Attendance[] }) {
     const router = useRouter()
     const [phone, setPhone] = useState('')
     const [name, setName] = useState('')
@@ -54,8 +70,8 @@ export default function AttendanceClient({ sessionId, session, initialAttendance
             setPhone('')
             setName('')
             setVisitorId('')
-        } catch (err: any) {
-            setMessage(err.message || 'Erro ao registrar')
+        } catch (err: unknown) {
+            setMessage(err instanceof Error ? err.message : 'Erro ao registrar')
         } finally {
             setLoading(false)
         }
@@ -84,9 +100,10 @@ export default function AttendanceClient({ sessionId, session, initialAttendance
                 </div>
 
                 {session && (
-                    <p className="text-sm text-muted-foreground">
-                        Fichas de consulta: {session.consultation_tickets_used}/{session.consultation_tickets_available}
-                    </p>
+                    <div className="flex flex-col gap-1 text-sm text-muted-foreground">
+                        <p>Fichas de consulta: {session.consultation_tickets_used}/{session.consultation_tickets_available}</p>
+                        <p>Gira: <span className="font-medium text-foreground">{session.gira}</span></p>
+                    </div>
                 )}
 
                 <Card>
@@ -152,14 +169,16 @@ export default function AttendanceClient({ sessionId, session, initialAttendance
                                 <TableRow>
                                     <TableHead>Nome</TableHead>
                                     <TableHead>Celular</TableHead>
+                                    <TableHead>Gira</TableHead>
                                     <TableHead>Ficha</TableHead>
                                 </TableRow>
                             </TableHeader>
                             <TableBody>
-                                {initialAttendances?.map((a: any) => (
+                                {initialAttendances?.map((a: Attendance) => (
                                     <TableRow key={a.id}>
                                         <TableCell>{a.visitor.name}</TableCell>
                                         <TableCell>{a.visitor.phone}</TableCell>
+                                        <TableCell>{session?.gira || '-'}</TableCell>
                                         <TableCell>
                                             <Badge variant={ticketVariant[a.ticket_type]}>{ticketLabel[a.ticket_type]}</Badge>
                                         </TableCell>
