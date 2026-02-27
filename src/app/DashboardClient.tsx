@@ -80,7 +80,7 @@ export default function DashboardClient({ initialSession }: { initialSession: Se
                             </div>
                             <div className="flex gap-2">
                                 <Button className="flex-1" onClick={() => router.push(`/attendance/${initialSession.id}`)} disabled={loading}>
-                                    Registrar Presença
+                                    Assistência
                                 </Button>
                                 <Button variant="destructive" onClick={handleCloseSession} disabled={loading}>
                                     Fechar Sessão

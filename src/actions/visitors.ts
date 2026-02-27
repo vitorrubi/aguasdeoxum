@@ -25,3 +25,14 @@ export async function createVisitor(name: string, phone: string) {
     if (error) throw new Error(error.message)
     return data
 }
+
+export async function getAllVisitors() {
+    const supabase = await createClient()
+    const { data, error } = await supabase
+        .from('visitors')
+        .select('id, name, phone')
+        .order('name', { ascending: true })
+
+    if (error) return []
+    return data
+}

@@ -8,9 +8,16 @@ import { Label } from '@/components/ui/label'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table'
-import { getVisitorByPhone, createVisitor } from '@/actions/visitors'
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog'
+import { getVisitorByPhone, createVisitor, getAllVisitors } from '@/actions/visitors'
 import { registerAttendance } from '@/actions/attendances'
 import { formatPhone } from '@/lib/utils'
+
+interface Visitor {
+    id: string
+    name: string
+    phone: string
+}
 
 interface Session {
     id: string
@@ -36,6 +43,32 @@ export default function AttendanceClient({ sessionId, session, initialAttendance
     const [visitorId, setVisitorId] = useState('')
     const [message, setMessage] = useState('')
     const [loading, setLoading] = useState(false)
+    const [dialogOpen, setDialogOpen] = useState(false)
+    const [visitors, setVisitors] = useState<Visitor[]>([])
+    const [visitorSearch, setVisitorSearch] = useState('')
+    const [loadingVisitors, setLoadingVisitors] = useState(false)
+
+    async function handleOpenDialog() {
+        setDialogOpen(true)
+        setLoadingVisitors(true)
+        const data = await getAllVisitors()
+        setVisitors(data)
+        setLoadingVisitors(false)
+    }
+
+    function handleSelectVisitor(v: Visitor) {
+        setPhone(formatPhone(v.phone))
+        setName(v.name)
+        setVisitorId(v.id)
+        setIsNew(false)
+        setDialogOpen(false)
+        setVisitorSearch('')
+    }
+
+    const filteredVisitors = visitors.filter(v =>
+        v.name.toLowerCase().includes(visitorSearch.toLowerCase()) ||
+        v.phone.includes(visitorSearch.replace(/\D/g, ''))
+    )
 
     async function handlePhoneBlur() {
         if (phone.replace(/\D/g, '').length < 10) return
@@ -97,7 +130,7 @@ export default function AttendanceClient({ sessionId, session, initialAttendance
         <div className="min-h-screen bg-muted/40 p-4">
             <div className="max-w-2xl mx-auto space-y-4">
                 <div className="flex items-center justify-between">
-                    <h1 className="text-xl font-bold">Registro de Presença</h1>
+                    <h1 className="text-xl font-bold">Assistência</h1>
                     <Button variant="outline" size="sm" onClick={() => router.push('/')}>Voltar</Button>
                 </div>
 
@@ -113,13 +146,54 @@ export default function AttendanceClient({ sessionId, session, initialAttendance
                     <CardContent className="space-y-4">
                         <div className="space-y-1">
                             <Label htmlFor="phone">Celular</Label>
-                            <Input
-                                id="phone"
-                                value={phone}
-                                onChange={(e) => setPhone(formatPhone(e.target.value))}
-                                onBlur={handlePhoneBlur}
-                                placeholder="(11) 99999-9999"
-                            />
+                            <div className="flex gap-2">
+                                <Input
+                                    id="phone"
+                                    value={phone}
+                                    onChange={(e) => setPhone(formatPhone(e.target.value))}
+                                    onBlur={handlePhoneBlur}
+                                    placeholder="(11) 99999-9999"
+                                    className="flex-1"
+                                />
+                                <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
+                                    <DialogTrigger asChild>
+                                        <Button variant="secondary" type="button" onClick={handleOpenDialog}>
+                                            Buscar
+                                        </Button>
+                                    </DialogTrigger>
+                                    <DialogContent className="max-w-md max-h-[70vh] flex flex-col">
+                                        <DialogHeader>
+                                            <DialogTitle>Selecionar Visitante</DialogTitle>
+                                        </DialogHeader>
+                                        <Input
+                                            placeholder="Filtrar por nome ou celular..."
+                                            value={visitorSearch}
+                                            onChange={(e) => setVisitorSearch(e.target.value)}
+                                        />
+                                        <div className="overflow-y-auto flex-1 -mx-1">
+                                            {loadingVisitors ? (
+                                                <p className="text-sm text-muted-foreground text-center py-4">Carregando...</p>
+                                            ) : filteredVisitors.length === 0 ? (
+                                                <p className="text-sm text-muted-foreground text-center py-4">Nenhum visitante encontrado.</p>
+                                            ) : (
+                                                <div className="space-y-1">
+                                                    {filteredVisitors.map((v) => (
+                                                        <button
+                                                            key={v.id}
+                                                            type="button"
+                                                            className="w-full text-left px-3 py-2 rounded-md hover:bg-muted transition-colors"
+                                                            onClick={() => handleSelectVisitor(v)}
+                                                        >
+                                                            <p className="font-medium text-sm">{v.name}</p>
+                                                            <p className="text-xs text-muted-foreground">{formatPhone(v.phone)}</p>
+                                                        </button>
+                                                    ))}
+                                                </div>
+                                            )}
+                                        </div>
+                                    </DialogContent>
+                                </Dialog>
+                            </div>
                         </div>
                         <div className="space-y-1">
                             <Label htmlFor="name">Nome</Label>
