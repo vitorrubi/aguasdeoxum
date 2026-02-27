@@ -23,6 +23,22 @@ CREATE TABLE attendances (
   UNIQUE (visitor_id, session_id)
 );
 
+-- ==========================================
+-- SECURITY (ROW LEVEL SECURITY - RLS)
+-- ==========================================
+ALTER TABLE visitors ENABLE ROW LEVEL SECURITY;
+ALTER TABLE sessions ENABLE ROW LEVEL SECURITY;
+ALTER TABLE attendances ENABLE ROW LEVEL SECURITY;
+
+DROP POLICY IF EXISTS "Allow authenticated full access to visitors" ON visitors;
+CREATE POLICY "Allow authenticated full access to visitors" ON visitors FOR ALL TO authenticated USING (auth.role() = 'authenticated');
+
+DROP POLICY IF EXISTS "Allow authenticated full access to sessions" ON sessions;
+CREATE POLICY "Allow authenticated full access to sessions" ON sessions FOR ALL TO authenticated USING (auth.role() = 'authenticated');
+
+DROP POLICY IF EXISTS "Allow authenticated full access to attendances" ON attendances;
+CREATE POLICY "Allow authenticated full access to attendances" ON attendances FOR ALL TO authenticated USING (auth.role() = 'authenticated');
+
 -- MIGRATION: Se você já rodou o schema acima no Supabase antes de adicionar a Gira, 
 -- rode apenas essa linha no SQL Editor para atualizar a tabela:
 -- ALTER TABLE sessions ADD COLUMN gira TEXT NOT NULL DEFAULT 'Esquerda';

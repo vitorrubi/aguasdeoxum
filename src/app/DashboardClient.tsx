@@ -127,9 +127,14 @@ export default function DashboardClient({ initialSession }: { initialSession: Se
                     </Card>
                 )}
 
-                <Button variant="outline" className="w-full" onClick={() => router.push('/history')}>
-                    Consultar Histórico
-                </Button>
+                <div className="flex flex-col gap-2">
+                    <Button variant="outline" className="w-full" onClick={() => router.push('/history')}>
+                        Consultar Histórico do Visitante
+                    </Button>
+                    <Button variant="outline" className="w-full" onClick={() => router.push('/sessions')}>
+                        Consultar Histórico de Giras
+                    </Button>
+                </div>
             </div>
         </div>
     )

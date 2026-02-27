@@ -41,3 +41,14 @@ export async function closeSession(id: string) {
     revalidatePath('/')
     return { data, error }
 }
+
+export async function getAllSessions() {
+    const supabase = await createClient()
+    const { data, error } = await supabase
+        .from('sessions')
+        .select('*, attendances(id, ticket_type, visitor:visitors(name, phone))')
+        .order('opened_at', { ascending: false })
+
+    if (error) return []
+    return data
+}
